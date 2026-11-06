@@ -8,10 +8,12 @@ import re
 from typing import Dict, List
 
 import common
+import document
 import hypothesis
 import institute
+import page
 
-DEFAULT_SCORE_REGEX = re.compile(rf"([0-9,.]+)%")
+DEFAULT_SCORE_REGEX = re.compile(rf"([0-9,.]+)%?")
 
 INSTITUTE_SCORE_REGEX_MAP = {
     "Cluster17" : re.compile(rf"[0-9,.]+%\s+[0-9,.]+%\s+([0-9,.]+)%")
@@ -149,12 +151,26 @@ class PollMetadata:
         self.path = (metadata_path.parent / self.metadata["path"]).resolve(strict=True)
         self.institute = institute.Institute.create_from_path(self.path)
         self.sponsor = self.metadata["sponsor"]
+        if ',' in self.sponsor:
+            self.sponsor = f"\"{self.sponsor}\""
         self.begin = date(self.metadata["begin"])
         self.end = date(self.metadata["end"])
         self.pages = self.metadata["pages"]
 
         self.polls = self.metadata["polls"]
         self.poll_index = 0
+
+    def get_pages(self) -> list[page.Page]:
+        doc_class = None
+        if self.path.suffix == ".txt":
+            doc_class = document.ExtractedText
+        elif self.path.suffix == ".pdf":
+            doc_class = document.PDF
+
+        if not doc_class:
+            raise ValueError(f"Unknown suffix {self.path.suffix}")
+
+        return doc_class(self.path, self.pages).get_pages()       
 
     def create_poll(self, hyp: hypothesis.Hypothesis, scores: Dict[str, float]) -> Poll:
         result = Poll(

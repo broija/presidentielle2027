@@ -3,18 +3,13 @@
 import argparse
 import json
 import pathlib
-import re
 
 import candidate
 from common import PROJECT_DIR
 import hypothesis
-import page
 import poll
 
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
-
-PAGE_REGEX = re.compile(r"^--- page ([0-9]+) ---$")
-SCORE_REGEX = re.compile(rf"{candidate.REGEX_STR}\s+([0-9,.]+)%")
 
 argparser = argparse.ArgumentParser(description="Extract voting intentions from text")
 argparser.add_argument(
@@ -39,34 +34,8 @@ args = argparser.parse_args()
 
 poll_metadata = poll.PollMetadata(args.metadata_file)
 
-pg = None
-page_number = None
-pages = []
-
 # Lecture du fichier
-with poll_metadata.path.open("r", encoding="utf-8") as doc:
-    for line in doc:
-        line = line.strip()
-        if not line:
-            continue
-
-        page_match = PAGE_REGEX.match(line)
-        if page_match:
-            page_number = int(page_match.group(1))
-            # Page is targeted ?
-            if page_number in poll_metadata.pages:
-                pg = page.Page(page_number)
-                pages.append(pg)
-            else:
-                pg = None
-
-            continue
-        
-        if pg:
-            score_match = SCORE_REGEX.match(line)
-            if score_match:
-                cndt = str(score_match.group(1))
-                pg.scores[cndt] = line.replace(cndt, "").strip()
+pages = poll_metadata.get_pages()
 
 # Building hypothesis list
 hypotheses = hypothesis.File(args.hypotheses)

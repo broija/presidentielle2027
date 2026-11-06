@@ -7,6 +7,10 @@ from typing import Dict, List
 REGEX_STR = r"([A-Za-zÀ-ȕ- ]+[A-Za-zÀ-ȕ])"
 REGEX = re.compile(REGEX_STR)
 
+MAP = {
+    "Edouard Philippe": "Édouard Philippe"
+}
+
 class Candidate:
     def __init__(self, id: str, first_name: str, last_name: str):
         self.id = id
