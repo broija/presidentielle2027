@@ -65,7 +65,8 @@ with poll_metadata.path.open("r", encoding="utf-8") as doc:
         if pg:
             score_match = SCORE_REGEX.match(line)
             if score_match:
-                pg.scores[str(score_match.group(1))] = float(score_match.group(2).replace(',', "."))
+                cndt = str(score_match.group(1))
+                pg.scores[cndt] = line.replace(cndt, "").strip()
 
 # Building hypothesis list
 hypotheses = hypothesis.File(args.hypotheses)

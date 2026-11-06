@@ -11,6 +11,12 @@ import common
 import hypothesis
 import institute
 
+DEFAULT_SCORE_REGEX = re.compile(rf"([0-9,.]+)%")
+
+INSTITUTE_SCORE_REGEX_MAP = {
+    "Cluster17" : re.compile(rf"[0-9,.]+%\s+[0-9,.]+%\s+([0-9,.]+)%")
+}
+
 def date(value:str):
     return datetime.datetime.strptime(value, "%Y%m%d")
 
@@ -56,7 +62,18 @@ class Poll:
         self.end = end
         self.sponsor = sponsor
         self.samples = [Sample(s[0], s[1]) for s in samples]
-        self.scores = scores
+
+        regex = \
+            INSTITUTE_SCORE_REGEX_MAP[self.institute.name] \
+                if self.institute.name in INSTITUTE_SCORE_REGEX_MAP else DEFAULT_SCORE_REGEX
+
+        self.scores = {}
+        for cndt, score in scores.items():
+            match_res = regex.match(score)
+            if not match_res:
+                raise ValueError(f"Regex did not match {score}")
+
+            self.scores[cndt] = float(match_res.group(1).replace(',', '.'))
 
         self.media = media
         self.rolling = rolling
