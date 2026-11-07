@@ -12,6 +12,10 @@ PAGE_REGEX = re.compile(r"^--- page ([0-9]+) ---$")
 SCORE_REGEX = re.compile(rf"{candidate.REGEX_STR}\s+([0-9,.]+)%")
 NUMBER_REGEX = re.compile(r"^([0-9.]+)")
 
+FILTER_LIST = [
+    "Ne se prononcent pas"
+]
+
 class Document(abc.ABC):
     def __init__(self, path: pathlib.Path, pages: list[int]):
         self.path = path
@@ -93,6 +97,8 @@ class PDF(Document):
                     cndt = candidates[y]
                     if cndt in candidate.MAP:
                         cndt = candidate.MAP[cndt]
+                    elif cndt in FILTER_LIST:
+                        continue
                     p.scores[cndt] = v
 
             result.append(p)
